@@ -3,19 +3,19 @@ package transport
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/AlexCorn999/users/internal/config"
-	"github.com/go-chi/chi/middleware"
+	"github.com/AlexCorn999/users/internal/repository"
+	"github.com/AlexCorn999/users/internal/service"
 	"github.com/go-chi/chi/v5"
 	log "github.com/sirupsen/logrus"
 )
 
 type APIServer struct {
-	config *config.Config
-	router *chi.Mux
-	//store  *repository.UserStore
-	//users  *service.Users
+	config     *config.Config
+	router     *chi.Mux
+	postgreSQL *repository.Storage
+	users      *service.Users
 }
 
 func NewAPIServer(config *config.Config) *APIServer {
@@ -28,53 +28,32 @@ func NewAPIServer(config *config.Config) *APIServer {
 func (s *APIServer) Start(ctx context.Context) error {
 	s.configureRouter()
 
-	/*
-		if err := s.configureStore(); err != nil {
-			return err
-		}*/
+	db, err := s.configureStore()
+	if err != nil {
+		return err
+	}
+	s.postgreSQL = db
+	defer s.postgreSQL.Close()
 
-	//s.users = service.NewUsers(s.store)
+	// добавить
+	s.users = service.NewUsers(db)
 
 	log.Info("server starting...")
 
-	go func() {
-		if err := http.ListenAndServe(s.config.Port, s.router); err != nil {
-			log.Fatal(err)
-		}
-	}()
-	<-ctx.Done()
-	log.Info("shutting down server gracefully")
-
-	/*
-		b, err := json.Marshal(&s.store)
-		if err != nil {
-			return err
-		}
-
-		if err = os.WriteFile(s.config.FileStore, b, fs.ModePerm); err != nil {
-			return err
-		}*/
-
-	return nil
+	return http.ListenAndServe(s.config.Port, s.router)
 }
 
 func (s *APIServer) configureRouter() {
-	s.router.Use(middleware.RequestID)
-	s.router.Use(middleware.RealIP)
-	s.router.Use(middleware.Logger)
-	s.router.Use(middleware.Timeout(60 * time.Second))
-
-	s.router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(time.Now().String()))
-	})
+	s.router.Use(withLogging)
 	s.router.Post("/redis/incr", nil)
 	s.router.Post("/sign/hmacsha512", nil)
 	s.router.Post("/postgres/users", nil)
 }
 
-/*
-func (s *APIServer) configureStore() error {
-	store := repository.NewUserStore()
-	s.store = store
-	return nil
-}*/
+func (s *APIServer) configureStore() (*repository.Storage, error) {
+	db, err := repository.NewStorage(s.config.PortDB)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
