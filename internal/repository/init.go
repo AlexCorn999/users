@@ -5,19 +5,24 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pressly/goose"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"github.com/pressly/goose/v3"
+	"github.com/redis/go-redis/v9"
 )
 
 var (
 	ErrDuplicate = errors.New("login already in use")
 )
 
-type Storage struct {
+type PostgreSQL struct {
 	db *sql.DB
 }
 
-// NewStorage инициализирует хранилище и применяет миграции.
-func NewStorage(addr string) (*Storage, error) {
+type Redis struct {
+	db *redis.Client
+}
+
+func NewPotgreSQL(addr string) (*PostgreSQL, error) {
 	db, err := goose.OpenDBWithDriver("pgx", addr)
 	if err != nil {
 		return nil, fmt.Errorf("goose: failed to open DB: %v", err)
@@ -28,12 +33,23 @@ func NewStorage(addr string) (*Storage, error) {
 		return nil, fmt.Errorf("goose: failed to migrate: %v", err)
 	}
 
-	return &Storage{
+	return &PostgreSQL{
 		db: db,
 	}, nil
 }
 
-// CloseDB закрывает подключение к базе данных.
-func (s *Storage) Close() error {
+func (s *PostgreSQL) Close() error {
 	return s.db.Close()
+}
+
+func NewRedis(addr string) (*Redis, error) {
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     addr,
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	return &Redis{
+		db: rdb,
+	}, nil
 }

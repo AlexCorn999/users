@@ -6,7 +6,7 @@ CREATE TABLE
     users (
         id SERIAL PRIMARY KEY,
         login VARCHAR(255) NOT NULL UNIQUE,
-        age INT NOT NULL,
+        age INT NOT NULL
     );
 
 -- +goose StatementEnd

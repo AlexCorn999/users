@@ -18,7 +18,6 @@ func NewUsers(repo UserRepository) *Users {
 	}
 }
 
-// CreateUser отвечает за добавление пользователя в базу данных.
 func (u *Users) CreateUser(usr *domain.User) (int, error) {
 	user := &domain.User{
 		Login: usr.Login,

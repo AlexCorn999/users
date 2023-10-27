@@ -14,8 +14,11 @@ import (
 type APIServer struct {
 	config     *config.Config
 	router     *chi.Mux
-	postgreSQL *repository.Storage
+	postgreSQL *repository.PostgreSQL
+	redis      *repository.Redis
 	users      *service.Users
+	sign       *service.Sign
+	storage    *service.Storage
 }
 
 func NewAPIServer(config *config.Config) *APIServer {
@@ -28,15 +31,22 @@ func NewAPIServer(config *config.Config) *APIServer {
 func (s *APIServer) Start(ctx context.Context) error {
 	s.configureRouter()
 
-	db, err := s.configureStore()
+	db, err := s.configurePostgreSQL()
 	if err != nil {
 		return err
 	}
 	s.postgreSQL = db
 	defer s.postgreSQL.Close()
 
-	// добавить
+	redisDB, err := s.configureRedis()
+	if err != nil {
+		return err
+	}
+	s.redis = redisDB
+
 	s.users = service.NewUsers(db)
+	s.sign = service.NewSign()
+	s.storage = service.NewStorage(redisDB)
 
 	log.Info("server starting...")
 
@@ -45,13 +55,21 @@ func (s *APIServer) Start(ctx context.Context) error {
 
 func (s *APIServer) configureRouter() {
 	s.router.Use(withLogging)
-	s.router.Post("/redis/incr", nil)
-	s.router.Post("/sign/hmacsha512", nil)
-	s.router.Post("/postgres/users", nil)
+	s.router.Post("/redis/incr", s.AddValue)
+	s.router.Post("/sign/hmacsha512", s.SignHmacSha512)
+	s.router.Post("/postgres/users", s.CreateUser)
 }
 
-func (s *APIServer) configureStore() (*repository.Storage, error) {
-	db, err := repository.NewStorage(s.config.PortDB)
+func (s *APIServer) configurePostgreSQL() (*repository.PostgreSQL, error) {
+	db, err := repository.NewPotgreSQL(s.config.PortPostgreSQL)
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func (s *APIServer) configureRedis() (*repository.Redis, error) {
+	db, err := repository.NewRedis(s.config.PortRedis)
 	if err != nil {
 		return nil, err
 	}

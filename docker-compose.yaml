@@ -1,0 +1,19 @@
+version: "3.5"
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:13.3
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1234
+    ports:
+      - "5432:5432"
+
+  redis:
+      container_name: redis
+      image: redis:latest
+      environment:
+        - REDIS_HOST=redis
+        - REDIS_PORT=6379
+      ports:
+        - 6379:6379
