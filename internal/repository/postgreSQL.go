@@ -7,7 +7,6 @@ import (
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
-	"github.com/redis/go-redis/v9"
 )
 
 var (
@@ -16,10 +15,6 @@ var (
 
 type PostgreSQL struct {
 	db *sql.DB
-}
-
-type Redis struct {
-	db *redis.Client
 }
 
 func NewPotgreSQL(addr string) (*PostgreSQL, error) {
@@ -40,16 +35,4 @@ func NewPotgreSQL(addr string) (*PostgreSQL, error) {
 
 func (s *PostgreSQL) Close() error {
 	return s.db.Close()
-}
-
-func NewRedis(addr string) (*Redis, error) {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     addr,
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
-	return &Redis{
-		db: rdb,
-	}, nil
 }

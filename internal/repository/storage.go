@@ -3,17 +3,18 @@ package repository
 import (
 	"context"
 	"strconv"
+	"sync/atomic"
 
 	"github.com/AlexCorn999/users/internal/domain"
 )
 
-func (r *Redis) AddValue(input *domain.RedisInput) (int, error) {
-	err := r.db.Set(context.Background(), input.Key, input.Value, 0).Err()
+func (r *Redis) AddValue(ctx context.Context, input *domain.RedisInput) (int, error) {
+	err := r.db.Set(ctx, input.Key, input.Value, 0).Err()
 	if err != nil {
 		return 0, err
 	}
 
-	val, err := r.db.Get(context.Background(), input.Key).Result()
+	val, err := r.db.Get(ctx, input.Key).Result()
 	if err != nil {
 		return 0, err
 	}
@@ -23,8 +24,8 @@ func (r *Redis) AddValue(input *domain.RedisInput) (int, error) {
 		return 0, err
 	}
 
-	// сделать потокобезопасным
-	value++
+	value32 := int32(value)
+	atomic.AddInt32(&value32, 1)
 
-	return value, nil
+	return int(value32), nil
 }

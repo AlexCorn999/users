@@ -1,9 +1,13 @@
 package service
 
-import "github.com/AlexCorn999/users/internal/domain"
+import (
+	"context"
+
+	"github.com/AlexCorn999/users/internal/domain"
+)
 
 type StorageRepository interface {
-	AddValue(input *domain.RedisInput) (int, error)
+	AddValue(ctx context.Context, input *domain.RedisInput) (int, error)
 }
 
 type Storage struct {
@@ -16,6 +20,6 @@ func NewStorage(repo StorageRepository) *Storage {
 	}
 }
 
-func (s *Storage) AddValue(input *domain.RedisInput) (int, error) {
-	return s.repo.AddValue(input)
+func (s *Storage) AddValue(ctx context.Context, input *domain.RedisInput) (int, error) {
+	return s.repo.AddValue(ctx, input)
 }

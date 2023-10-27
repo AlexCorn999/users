@@ -17,20 +17,20 @@ func (s *APIServer) SignHmacSha512(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var sign domain.SignHmacSha512
-	if err := json.Unmarshal(data, &sign); err != nil {
+	var signData domain.SignHmacSha512
+	if err := json.Unmarshal(data, &signData); err != nil {
 		logError("signHmacSha512", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	if err := sign.Validate(); err != nil {
+	if err := signData.Validate(); err != nil {
 		logError("signHmacSha512", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	result, err := s.sign.SignHmacSha512(&sign)
+	result, err := s.sign.SignHmacSha512(&signData)
 	if err != nil {
 		logError("signHmacSha512", err)
 		w.WriteHeader(http.StatusBadRequest)

@@ -1,11 +1,13 @@
 package service
 
 import (
+	"context"
+
 	"github.com/AlexCorn999/users/internal/domain"
 )
 
 type UserRepository interface {
-	CreateUser(user *domain.User) (int, error)
+	CreateUser(ctx context.Context, user *domain.User) (int, error)
 }
 
 type Users struct {
@@ -18,10 +20,6 @@ func NewUsers(repo UserRepository) *Users {
 	}
 }
 
-func (u *Users) CreateUser(usr *domain.User) (int, error) {
-	user := &domain.User{
-		Login: usr.Login,
-		Age:   usr.Age,
-	}
-	return u.repo.CreateUser(user)
+func (u *Users) CreateUser(ctx context.Context, usr *domain.User) (int, error) {
+	return u.repo.CreateUser(ctx, usr)
 }

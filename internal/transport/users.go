@@ -32,7 +32,7 @@ func (s *APIServer) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := s.users.CreateUser(&usr)
+	id, err := s.users.CreateUser(r.Context(), &usr)
 	if err != nil {
 		if errors.Is(err, repository.ErrDuplicate) {
 			w.WriteHeader(http.StatusConflict)

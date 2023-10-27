@@ -29,6 +29,7 @@ func NewAPIServer(config *config.Config) *APIServer {
 }
 
 func (s *APIServer) Start(ctx context.Context) error {
+	s.config.ParseFlags()
 	s.configureRouter()
 
 	db, err := s.configurePostgreSQL()

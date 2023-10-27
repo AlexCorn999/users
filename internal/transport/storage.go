@@ -30,10 +30,11 @@ func (s *APIServer) AddValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	value, err := s.redis.AddValue(&input)
+	value, err := s.redis.AddValue(r.Context(), &input)
 	if err != nil {
 		logError("addValue", err)
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	redisOutput := domain.RedisOutput{
