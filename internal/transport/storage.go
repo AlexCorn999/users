@@ -30,7 +30,7 @@ func (s *APIServer) AddValue(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	value, err := s.redis.AddValue(r.Context(), &input)
+	value, err := s.storage.AddValue(r.Context(), input)
 	if err != nil {
 		logError("addValue", err)
 		w.WriteHeader(http.StatusInternalServerError)

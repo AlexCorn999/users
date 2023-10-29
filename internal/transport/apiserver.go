@@ -1,7 +1,6 @@
 package transport
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/AlexCorn999/users/internal/config"
@@ -12,13 +11,11 @@ import (
 )
 
 type APIServer struct {
-	config     *config.Config
-	router     *chi.Mux
-	postgreSQL *repository.PostgreSQL
-	redis      *repository.Redis
-	users      *service.Users
-	sign       *service.Sign
-	storage    *service.Storage
+	config  *config.Config
+	router  *chi.Mux
+	users   *service.Users
+	sign    *service.Sign
+	storage *service.Storage
 }
 
 func NewAPIServer(config *config.Config) *APIServer {
@@ -28,7 +25,7 @@ func NewAPIServer(config *config.Config) *APIServer {
 	}
 }
 
-func (s *APIServer) Start(ctx context.Context) error {
+func (s *APIServer) Start() error {
 	s.config.ParseFlags()
 	s.configureRouter()
 
@@ -36,18 +33,15 @@ func (s *APIServer) Start(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	s.postgreSQL = db
-	defer s.postgreSQL.Close()
 
 	redisDB, err := s.configureRedis()
 	if err != nil {
 		return err
 	}
-	s.redis = redisDB
 
+	s.storage = service.NewStorage(redisDB)
 	s.users = service.NewUsers(db)
 	s.sign = service.NewSign()
-	s.storage = service.NewStorage(redisDB)
 
 	log.Info("server starting...")
 

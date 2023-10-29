@@ -8,7 +8,7 @@ import (
 	"github.com/AlexCorn999/users/internal/domain"
 )
 
-func (r *Redis) AddValue(ctx context.Context, input *domain.RedisInput) (int, error) {
+func (r *Redis) AddValue(ctx context.Context, input domain.RedisInput) (int, error) {
 	err := r.db.Set(ctx, input.Key, input.Value, 0).Err()
 	if err != nil {
 		return 0, err

@@ -9,7 +9,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-func (s *PostgreSQL) CreateUser(ctx context.Context, user *domain.User) (int, error) {
+func (s *PostgreSQL) CreateUser(ctx context.Context, user domain.User) (int, error) {
 	var id int
 	err := s.db.QueryRowContext(ctx, "INSERT INTO users (login, age) values ($1, $2) RETURNING id",
 		user.Login, user.Age).Scan(&id)
